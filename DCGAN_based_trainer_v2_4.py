@@ -9,7 +9,7 @@ from PIL import Image
 from tqdm import tqdm
 
 # ------------------ CONFIG ------------------
-data_path = "/img_align_celeba"  # make sure this is the full path with the CelebA Dataset "https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html"
+data_path = "img_align_celeba_compressed"  # make sure this is the full path with the CelebA Dataset "https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html"
 save_dir = "output"
 os.makedirs(save_dir, exist_ok=True)
 
@@ -21,7 +21,7 @@ lr = 0.0002
 beta1 = 0.5
 lambda_recon = 50.0  # weight for reconstruction loss
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("mps" if torch.backends.mps.is_available() else ("cuda" if torch.cuda.is_available() else "cpu"))
 print("Using device:", device)
 
 # ------------------ DATASET ------------------
@@ -105,7 +105,7 @@ class Decoder(nn.Module):
 dataset = CelebADataset(root_dir=data_path, transform=transform)
 print("Found", len(dataset), "images")
 
-dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=0)
 
 netG = Generator().to(device)
 netD = Discriminator().to(device)
