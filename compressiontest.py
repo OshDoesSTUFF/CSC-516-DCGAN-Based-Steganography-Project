@@ -8,20 +8,21 @@ from PIL import Image
 success_count = 0
 results = []
 
-num_tests = 100  # or any number of repetitions
+num_tests = 50  # or any number of repetitions
 
 for i in range(num_tests):
     # Generate a random 12-character message (lowercase letters)
     original_msg = ''.join(random.choices(string.ascii_lowercase, k=12))
     filename = f"stego_{i:03d}.png"
     # Generate image
-    image_path = generate_stego_image(original_msg, file_name=filename)
-    
+    image_path = generate_stego_image(original_msg, file_name=filename, output_path="images_generated")
     # Convert PNG to JPEG with compression
-    jpg_path = f"stego_{i:03d}.jpg"
+    jpg_dir = "images_generated_compressed"
+    os.makedirs(jpg_dir, exist_ok=True)
+    jpg_path = os.path.join(jpg_dir, f"stego_{i:03d}.jpg")
     with Image.open(image_path) as img:
         rgb_img = img.convert("RGB")
-        rgb_img.save(jpg_path, "JPEG", quality=100)  # Adjust quality as needed
+        rgb_img.save(jpg_path, "JPEG", quality=30)  # Adjust quality as needed
 
     # Decode message from the compressed JPEG
     recovered_msg = decode_image(jpg_path)
