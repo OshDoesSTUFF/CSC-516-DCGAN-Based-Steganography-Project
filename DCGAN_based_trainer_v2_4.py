@@ -7,9 +7,26 @@ from torchvision import transforms, utils
 from torch.utils.data import Dataset, DataLoader
 from PIL import Image
 from tqdm import tqdm
+from io import BytesIO
+
+def jpeg_compress_decompress(img_tensor, quality=50):
+    # img_tensor: (B, C, H, W), values in [-1, 1]
+    imgs = []
+    for img in img_tensor:
+        img = img.cpu()
+        img = (img * 0.5 + 0.5).clamp(0, 1)  # [-1,1] -> [0,1]
+        img_pil = transforms.ToPILImage()(img)
+        buffer = BytesIO()
+        img_pil.save(buffer, format='JPEG', quality=quality)
+        buffer.seek(0)
+        img_jpeg = Image.open(buffer)
+        img_tensor_jpeg = transforms.ToTensor()(img_jpeg)
+        img_tensor_jpeg = (img_tensor_jpeg - 0.5) / 0.5  # [0,1] -> [-1,1]
+        imgs.append(img_tensor_jpeg)
+    return torch.stack(imgs).to(img_tensor.device)
 
 # ------------------ CONFIG ------------------
-data_path = "img_align_celeba_compressed"  # make sure this is the full path with the CelebA Dataset "https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html"
+data_path = "img_align_celeba"  # make sure this is the full path with the CelebA Dataset "https://mmlab.ie.cuhk.edu.hk/projects/CelebA.html"
 save_dir = "output"
 os.makedirs(save_dir, exist_ok=True)
 
@@ -154,8 +171,13 @@ if training:
             label.fill_(1.0)
             output = netD(fake).view(-1)
             errG = criterion(output, label)
-            recon = netDec(fake)
+            
+            compressed_fake = jpeg_compress_decompress(fake, quality=75)  # you can randomize quality if you want
+
+            # Use compressed_fake for the decoder and reconstruction loss
+            recon = netDec(compressed_fake)
             errRecon = recon_loss(recon, noise.view(b_size, -1))
+            
             total_loss = errG + lambda_recon * errRecon
             total_loss.backward()
             optimizerG.step()
@@ -201,7 +223,8 @@ z_msg, original_bits = message_to_noise(test_msg, nz)
 with torch.no_grad():
     stego_img = netG(z_msg)
     utils.save_image(stego_img, os.path.join(save_dir, "stego_result.png"), normalize=True)
-    recovered_z = netDec(stego_img).detach().cpu()
+    compressed_stego_img = jpeg_compress_decompress(stego_img, quality=75)
+    recovered_z = netDec(compressed_stego_img).detach().cpu()
 
 decoded_msg, decoded_bits = noise_to_message(recovered_z)
 
