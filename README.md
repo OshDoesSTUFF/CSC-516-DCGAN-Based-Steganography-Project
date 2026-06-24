@@ -63,9 +63,13 @@ During training, the generated image is compressed before the decoder attempts t
 | JPEG compression QF = 75 | 59%                    | 83%                     |
 | JPEG compression QF = 30 | 58%                    | 80%                     |
 
-## Result Thoughts
-
-80% is ok but not good enough as is. Could be improved with more training, or mitigated with error correction.
+## Error Correction Experiments Results
+Format: bit accuracy % / exact match %
+| Condition | Baseline | Hamming | Confidence | Learned Denoiser | 3x Repetition |
+| --- | --- | --- | --- | --- | --- |
+| **No compression** | 86.19% / 0% | 85.75% / 2% | 86.19% / 0% | 85.44% / 0% | 94.75% / 26% |
+| **JPEG QF=75** | 86.56% / 0% | 84.56% / 0% | 86.56% / 0% | 86.06% / 0% | 94.50% / 24% |
+| **JPEG QF=30** | 83.88% / 0% | 78.69% / 0% | 83.88% / 0% | 83.56% / 0% | 92.50% / 10% |
 
 ## My Code Contributions
 
@@ -83,3 +87,5 @@ During training, the generated image is compressed before the decoder attempts t
 - Create a new DCGAN trainer that trains on generated images that have gone through compression.
 
 - The resulting generator, decoder, and discriminators created by the new trainer
+
+- Error correction scripts and testing script to measure efficacy
