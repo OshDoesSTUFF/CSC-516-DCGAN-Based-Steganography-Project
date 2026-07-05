@@ -89,3 +89,6 @@ Format: bit accuracy % / exact match %
 - The resulting generator, decoder, and discriminators created by the new trainer
 
 - Error correction scripts and testing script to measure efficacy
+
+## Full Report
+[Read the full report here.](CSC616_Technical_Report.pdf)
